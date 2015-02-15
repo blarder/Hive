@@ -1,0 +1,2 @@
+[staging]
+testappblarder.xyz ansible_connection=ssh ansible_ssh_user=brett

@@ -1,0 +1,18 @@
+CELERYD_NODES="worker1"
+CELERY_BIN="{{ celery_binary }}"
+CELERY_APP="{{ project_name }}"
+CELERYD_CHDIR="{{ source_directory }}"
+
+# %N will be replaced with the first part of the nodename.
+CELERYD_LOG_FILE="/home/celery/log"
+CELERYD_PID_FILE="/home/celery/pid"
+
+# Workers should run as an unprivileged user.
+#   You need to create this user manually (or you can choose
+#   a user/group combination that already exists, e.g. nobody).
+CELERYD_USER="celery"
+CELERYD_GROUP="celerygroup"
+
+# If enabled pid and log directories will be created if missing,
+# and owned by the userid/group configured.
+CELERY_CREATE_DIRS=1

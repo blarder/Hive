@@ -1,0 +1,47 @@
+<div ui-content-for="title">
+    <span>Your Data</span>
+</div>
+
+
+<div class="scrollable container">
+    <div class="scrollable-content">
+        <div class="section">
+            <div class="col-md-12" role="main">
+                <div class="list-group">
+
+                    <li class="list-group-item">
+                        <strong>Username</strong>
+                        : {{user.username}}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Email</strong>
+                        : {{user.email}}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Verified</strong>
+                        : {{user.verified}}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>First Name</strong>
+                        : {{user.first_name}}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Last Name</strong>
+                        : {{user.last_name}}
+                    </li>
+                    <label> Subscriptions</label>
+                    <div class="form-control" ng-repeat="channel in user.subscriptions">
+                        <label>{{channel.name}}</label>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div ui-content-for="bottomNavButtons"></div>

@@ -1,0 +1,25 @@
+<div ui-content-for="title">
+    <span>Your Messages</span>
+</div>
+
+
+<div class="scrollable container">
+    <div class="scrollable-content">
+        <div class="section">
+            <div class="col-md-12" role="main">
+                <div class="list-group">
+
+                    <li class="list-group-item" ng-repeat="message in messages">
+                        <strong>{{message.headline}}</strong>
+                        <p>{{message.detail}}</p>
+                        <p>Sent At: {{message.time | date:'dd-MM-yyyy HH:mm'}}</p>
+                    </li>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div ui-content-for="bottomNavButtons"></div>

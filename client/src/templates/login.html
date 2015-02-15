@@ -1,0 +1,44 @@
+<div ui-content-for="title">
+    <span>Log in</span>
+</div>
+
+<div ui-content-for="menuAction"></div>
+
+<div ui-content-for="leftSidebar"></div>
+
+<div class="scrollable container">
+    <div class="scrollable-content">
+        <div class="section">
+
+            <h1 class="text-center">Hive</h1>
+
+            <form class="form-signin" role="form">
+                <label class="label label-danger" ng-show="currentConfig == 'signup'">{{errors.username[0]}}</label>
+                <input class="form-control" placeholder="Username" ng-model="username">
+
+                <label class="label label-danger" ng-show="currentConfig == 'signup'">{{errors.password[0]}}</label>
+                <input type="password" class="form-control" placeholder="Password" ng-model="password">
+
+                <div ng-show="currentConfig == 'signup'">
+                    <input type="password" class="form-control" placeholder="Confirm Password" ng-model="passwordConfirmation">
+                    <label class="label label-danger" ng-show="currentConfig == 'signup'">{{errors.email[0]}}</label>
+                    <input type="email" class="form-control" placeholder="email@address.com" ng-model="email">
+                    <input class="form-control" placeholder="First Name" ng-model="firstName">
+                    <input class="form-control" placeholder="Last Name" ng-model="lastName">
+
+                    <label> Subscriptions</label>
+                    <div class="form-control" ng-repeat="channel in availableChannels">
+                        <label>{{channel.name}} <input type="checkbox" ng-model="channel.selected"></label>
+
+                    </div>
+                </div>
+                <label>{{statusText}}</label>
+                <a ng-click="forgotPassword()">Forgotten password?</a>
+                <button type="submit" class="btn btn-primary btn-block" ng-click="currentAction()">{{actionButtonText}}</button>
+                <button type="button" class="btn btn-primary btn-block" ng-click="toggleConfig()">{{toggleButtonText}}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div ui-content-for="bottomNavButtons"></div>

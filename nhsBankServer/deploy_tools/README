@@ -1,0 +1,5 @@
+To deploy, cd into this directory, and use:
+
+ansible-playbook -i inventory.ansible provision.ansible.yaml
+
+to re-create database structure, add --extra-vars "flushdb=True"

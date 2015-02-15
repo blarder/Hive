@@ -1,0 +1,278 @@
+---
+
+- hosts: all
+
+  sudo: yes
+  user: brett
+
+  vars:
+      host: testappblarder.xyz
+      site_directory: /home/brett/sites
+      repo_url: https://bankdeployer:Purport280@github.com/blarder/nhsBankServer.git
+      project_name: nhs
+      source_directory: "{{ site_directory }}/{{ host }}/source"
+      virtual_python: "{{ site_directory }}/{{ host }}/virtualenv/bin/python3"
+      celery_binary: "{{ site_directory }}/{{ host }}/virtualenv/bin/celery"
+
+  tasks:
+
+    - debug: msg='ansible ssh user is {{ ansible_ssh_user }}'
+
+    - name: ensure required packages are installed
+      apt: pkg=nginx,git,python3,python3-pip,gunicorn,redis-server,nodejs,npm state=present
+      async: 3600
+      poll: 15
+    - name: ensure virtualenv is installed
+      shell: pip3 install virtualenv
+
+    - name: ensure forever is installed
+      npm: name=forever global=yes
+
+    - name: create site directory if needed
+      file: path="{{ site_directory }}" state=directory
+    - name: create host directory if needed
+      file: path="{{ site_directory }}/{{ host }}" state=directory
+    - name: create source directory if needed
+      file: path="{{ source_directory }}" state=directory
+    - name: create static directory if needed
+      file: path="{{ site_directory }}/{{ host }}/static" state=directory
+    - name: create virtualenv directory if needed
+      file: path="{{ site_directory }}/{{ host }}/virtualenv" state=directory
+    - name: create database directory if needed
+      file: path="{{ site_directory }}/{{ host }}/database" state=directory
+
+    - name: clone repository if necessary
+      git: repo={{ repo_url }}
+           dest={{ source_directory }}
+
+    - name: ensure socket.io is installed
+      npm: name=socket.io path={{ source_directory }}
+
+    - name: ensure redis bindings for node are installed
+      npm: name=redis path={{ source_directory }}
+
+    - name: ensure cookie parser is installed
+      npm: name=cookie path={{ source_directory }}
+
+    - stat: path="{{ site_directory }}/{{ host }}/virtualenv/bin/pip"
+      register: virtual_env_dir
+
+    - name: create virtual env if needed
+      shell: virtualenv --python=python3 {{ site_directory }}/{{ host }}/virtualenv
+      when: virtual_env_dir.stat.exists == False
+
+    - name: run installs
+      shell: "{{ site_directory }}/{{ host }}/virtualenv/bin/pip install -r {{ source_directory }}/requirements.txt"
+      sudo: yes
+      async: 3600
+      poll: 30
+
+    # ---   POSTGRES ONLY   ---
+
+    - name: Install PostgreSQL
+      apt: name={{ item }} state=installed
+      with_items:
+        - postgresql
+        - postgresql-contrib
+        - libpq-dev
+        - python-psycopg2
+      tags: packages
+
+    - name: Ensure the PostgreSQL service is running
+      service: name=postgresql state=started enabled=yes
+
+    - name: Remove past instance of database
+      sudo_user: postgres
+      postgresql_db: name={{ project_name }}
+                     encoding='UTF-8'
+                     lc_collate='en_US.UTF-8'
+                     lc_ctype='en_US.UTF-8'
+                     template='template0'
+                     state=absent
+      when: flushdb|default(false)
+
+    - name: Ensure database is created
+      sudo_user: postgres
+      postgresql_db: name={{ project_name }}
+                     encoding='UTF-8'
+                     lc_collate='en_US.UTF-8'
+                     lc_ctype='en_US.UTF-8'
+                     template='template0'
+                     state=present
+
+    - name: Ensure user has access to the database
+      sudo_user: postgres
+      postgresql_user: db={{ project_name }}
+                       name={{ project_name }}
+                       password=password
+                       priv=ALL
+                       state=present
+
+    - name: Ensure user does not have unnecessary privileges
+      sudo_user: postgres
+      postgresql_user: name={{ project_name }}
+                       role_attr_flags=NOSUPERUSER,NOCREATEDB
+                       state=present
+
+    - name: Update database choice
+      lineinfile:
+        dest=/{{ source_directory }}/{{ project_name }}/settings.py
+        regexp='(DATABASES = DATABASES_SQLITE3)'
+        backrefs=yes
+        line='DATABASES = DATABASES_POSTGRESQL'
+
+    # ---   END POSTGRES ONLY   ---
+
+    # ---   DEBUG FLAG REMOVAL   ---
+
+    #- name: update template debug setting
+    #  lineinfile:
+    #    dest=/{{ source_directory }}/{{ project_name }}/settings.py
+    #    regexp='(TEMPLATE_DEBUG = True)'
+    #    backrefs=yes
+    #    line='TEMPLATE_DEBUG = False'
+
+    #- name: update debug setting
+    #  lineinfile:
+    #    dest=/{{ source_directory }}/{{ project_name }}/settings.py
+    #    regexp='(DEBUG = True)'
+    #    backrefs=yes
+    #    line='DEBUG = False'
+
+    # ---   END DEBUG FLAG REMOVAL   ---
+
+    - name: update allowed hosts
+      lineinfile:
+        dest=/{{ source_directory }}/{{ project_name }}/settings.py
+        regexp='(ALLOWED_HOSTS = \[\])'
+        backrefs=yes
+        line="ALLOWED_HOSTS = ['{{ host }}']"
+
+    - set_fact:
+        secret: "{{ lookup('password', 'secret_key length=50') }}"
+
+    - name: update secret key
+      lineinfile:
+        dest=/{{ source_directory }}/{{ project_name }}/settings.py
+        regexp='(SECRET_KEY =.*)'
+        backrefs=yes
+        line="SECRET_KEY = '{{ secret }}'"
+
+    - name: update statics
+      shell: "{{ virtual_python }} {{ source_directory }}/manage.py collectstatic --noinput"
+
+    - name: update database
+      shell: "{{ virtual_python }} {{ source_directory }}/manage.py migrate --noinput"
+
+
+    - name: allow long hostnames in nginx
+      lineinfile:
+        dest=/etc/nginx/nginx.conf
+        regexp='(\s+)#? ?server_names_hash_bucket_size'
+        backrefs=yes
+        line='\1server_names_hash_bucket_size 64;'
+
+    - name: add nginx config to sites-available
+      template: src=./nginx.conf.j2
+                dest=/etc/nginx/sites-available/{{ host }}
+      notify:
+          - restart nginx
+
+    - name: add symlink in nginx sites-enabled
+      file: src=/etc/nginx/sites-available/{{ host }}
+            dest=/etc/nginx/sites-enabled/{{ host }} state=link
+      notify:
+          - restart nginx
+
+    - name: write gunicorn init script
+      template: src=./gunicorn-upstart.conf.j2
+                dest=/etc/init/gunicorn-{{ host }}.conf
+      notify:
+          - restart gunicorn
+
+    - name: write celeryd config
+      template: src=./celeryd.conf.j2
+                dest=/etc/default/celeryd
+                owner=root
+
+    - name: write live_feed.js node file
+      template: src=./live_feed.js.j2
+                dest={{ source_directory }}/node_server/live_feed.js
+
+    - name: write celeryd bash script
+      copy: src=./celeryd.bash
+            dest=/etc/init.d/celeryd
+      sudo: yes
+
+    - name: mark script as executable
+      shell: "sudo chmod +x /etc/init.d/celeryd"
+
+    - name: ensure celery group is present
+      group: name=celerygroup state=present
+
+    - name: ensure celery user is present
+      user: name=celery group=celerygroup
+
+    - name: make sure nginx is running
+      service: name=nginx state=running
+
+    - name: make sure redis server is running
+      service: name=redis-server state=running
+
+    - name: make sure gunicorn is running
+      service: name=gunicorn-{{ host }} state=running
+
+    - name: run celery server
+      shell: "sudo /etc/init.d/celeryd start"
+
+    - name: give celery workers access to database (SQLite ONLY)
+      shell: "sudo setfacl -m u:celery:rwx -R {{ site_directory }}/.."
+
+      notify:
+          - restart celery
+
+    - name: add symlink for node (needed for forever compatibility)
+      file: src=/usr/bin/nodejs
+            dest=/usr/bin/node state=link
+
+    - name: check if node socket exists
+      stat: path=/tmp/livefeed.sock
+      register: socket_stat
+
+    - name: Remove old node socket
+      command: rm /tmp/livefeed.sock
+      when: socket_stat.stat.exists
+
+    - name: Check list of Node.js apps running.
+      command: forever list
+      register: forever_list
+      changed_when: false
+
+    - name: Start Node.js app.
+      command: forever -e livefeed.err.log start /{{ source_directory }}/node_server/live_feed.js
+      when: "forever_list.stdout.find('/{{ source_directory }}/node_server/live_feed.js') == -1"
+
+    - name: allow access to socket
+      file: path=/tmp/livefeed.sock state=touch mode=0777
+
+    - name: ensure minutely cron tasks are in place
+      cron: name="minutely maintenance" minute=*/1 job="{{ virtual_python }} {{ source_directory }}/manage.py minutely"
+
+    - name: ensure hourly cron tasks are in place
+      cron: name="hourly maintenance" special_time=hourly job="{{ virtual_python }} {{ source_directory }}/manage.py hourly"
+
+    - name: ensure daily cron tasks are in place
+      cron: name="daily maintenance" special_time=daily job="{{ virtual_python }} {{ source_directory }}/manage.py daily"
+
+    - name: kill old gunicorn server ---MAY NEED TO REMOVE THIS FOR PRODUCTION---
+      shell: pkill gunicorn
+
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
+
+    - name: restart gunicorn
+      service: name=gunicorn-{{ host }} state=restarted
+
+    - name: restart celery
+      shell: "sudo /etc/init.d/celeryd restart"

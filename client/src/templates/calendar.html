@@ -1,0 +1,64 @@
+<div ui-content-for="title">
+    <span>Calendar</span>
+    <button type="button" class="btn-primary" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+</div>
+
+<div class="scrollable container">
+    <div class="scrollable-content">
+
+        <div class="section">
+            <div ui-calendar="calendarConfig.calendar" class="span8 calendar" ng-model="eventSources" calendar="shiftCalendar"></div>
+        </div>
+    </div>
+</div>
+
+<div ui-content-for="modals">
+    <div class="scrollable container modal modal-overlay" ng-if='showmodal' ui-state='showmodal'>
+        <div class="scrollable-content modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close"
+                            ng-click="hideModal()">&times;</button>
+                    <h4 class="modal-title">Details</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group">
+
+                        <li class="list-group-item">
+                            <strong>Shift ID Number</strong>
+                            : {{shift.id}}
+                        </li>
+
+                        <li class="list-group-item">
+                            <strong>Start Time</strong>
+                            : {{shift.start.format('lll') | date :'medium'}}
+                        </li>
+
+                        <li class="list-group-item">
+                            <strong>End Time</strong>
+                            : {{shift.end.format('lll') | date :'medium'}}
+                        </li>
+
+                        <li class="list-group-item">
+                            <strong>Location</strong>
+                            : {{shift.location.name}}
+                        </li>
+
+                        <li class="list-group-item">
+                            <strong>Detail</strong>
+                            : {{shift.detail}}
+                        </li>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button ng-click="hideModal()" class="btn btn-default">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div ui-content-for="bottomNavButtons">
+    <a class="btn btn-navbar" ng-click="prevMonth()"><i class="fa fa-caret-square-o-left fa-navbar" ></i> {{prevButtonText}}</a>
+    <a class="btn btn-navbar" ng-click="nextMonth()"><i class="fa fa-caret-square-o-right fa-navbar" ></i> {{nextButtonText}}</a>
+</div>

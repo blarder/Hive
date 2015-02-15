@@ -1,0 +1,17 @@
+*.pyc
+.idea/*
+src/*
+*/build/*
+*/dist/*
+*.egg-info
+*/secret_key
+*.ipynb
+node_modules/*
+npm-debug.log
+dump.rdb
+*/Allocator.xcodeproj/*
+allocator_files/Allocator/prog
+test_data*
+*.o
+*.so
+db.sqlite3

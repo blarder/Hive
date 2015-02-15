@@ -1,0 +1,25 @@
+<div ui-content-for="title">
+    <span>Devices</span>
+</div>
+
+<div class="scrollable container">
+    <div class="scrollable-content">
+        <div class="section">
+            <div class="col-md-12" role="main">
+                <div class="list-group">
+                    <li class="list-group-item" ng-hide="devices.length">
+                        <strong>No devices registered</strong>
+                    </li>
+                    <li class="list-group-item" ng-repeat="device in devices">
+                        <strong>Device name</strong>
+                        : {{device.name}}
+                    </li>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" ng-click="registerDevice()" ng-show="showRegistrationButton">Register This Device</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div ui-content-for="bottomNavButtons"></div>

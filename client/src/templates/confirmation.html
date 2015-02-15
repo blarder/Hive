@@ -1,0 +1,49 @@
+<div ui-content-for="title">
+    <span>Confirmation</span>
+</div>
+
+
+<div class="scrollable container">
+    <div class="scrollable-content">
+        <div class="section">
+            <div class="list-group">
+
+                <blockquote>{{titleText}}</blockquote>
+
+                <li class="list-group-item">
+                    <strong>Shift ID Number</strong>
+                    : {{shift.cover_request_reference}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Start Time</strong>
+                    : {{shift.start.format('lll') | date :'medium'}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>End Time</strong>
+                    : {{shift.end.format('lll') | date :'medium'}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Ward</strong>
+                    : {{shift.ward.name}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Detail</strong>
+                    : {{shift.detail}}
+                </li>
+
+                <button type="button" class="btn btn-primary btn-block" ng-click="addShiftToCalendar()" ng-hide="shift.cancelled">
+                    <i class="fa fa-calendar"></i> Add to Phone Calendar
+                </button>
+
+                <button type="button" class="btn btn-primary btn-block" ng-click="done()">
+                    <i class="fa fa-check"></i> Okay
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>

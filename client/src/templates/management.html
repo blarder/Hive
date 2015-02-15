@@ -1,0 +1,298 @@
+<div ui-content-for="title">
+    <span>Hive Messenger</span>
+    <button type="button" class="btn-primary" ng-click="refresh()" ng-disabled="loading"><i class="fa fa-refresh"></i></button>
+</div>
+
+<div ui-content-for="menuAction"></div>
+
+<div ui-content-for="leftSidebar" class="scrollable container">
+
+    <div class="scrollable-content">
+        <div class="section">
+            <h2>Updates</h2>
+            <button class="btn btn-primary btn-block" ng-click="viewAddShiftForm()">Add Shift</button>
+            <button class="btn btn-primary btn-block" ng-click="viewShiftList()">Shift List</button>
+            <button class="btn btn-primary btn-block" ng-click="viewWarningList()">Warning List</button>
+            <button ng-click="showModalForMassMessage()" class="btn btn-primary btn-block">Send Mass Notification</button>
+
+            <div class="list-group">
+                <a class="list-group-item" ng-repeat="adminWarning in warnings" ng-show="adminWarning.id" ng-click="viewWarning(adminWarning.id)">WARNING: {{adminWarning.detail}}</a>
+            </div>
+
+            <div class="list-group">
+                <a class="list-group-item" ng-repeat="log in shiftLogs" ng-click="viewShift(log.shift_id)">SHIFT {{log.shift_id}}: {{log.text}}</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="app-content-loading" ng-show="loading">
+    <i class="fa fa-spinner fa-spin loading-spinner"></i>
+</div>
+
+
+<div class="scrollable container section" ng-hide="loading">
+    <div class="scrollable-content three-quarter-height" ng-class="{fullheight: !comments}" ng-show="adminMode === 'shifts'">
+        <div class="section" ng-show="shift">
+            <div class="col-md-6">
+                <strong>Shift Information <button class="btn btn-inline" ng-click="openUrl(shift.admin_url)">Edit</button></strong>
+                <li class="list-group-item">
+                    <strong>Shift ID Number</strong>
+                    : {{shift.id}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Start Time</strong>
+                    : {{shift.start.format('lll') | date :'medium'}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>End Time</strong>
+                    : {{shift.end.format('lll') | date :'medium'}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Ward</strong>
+                    : {{shift.location.name}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Detail</strong>
+                    : {{shift.detail}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Publicly Available</strong>
+                    :
+                    <a ng-click="toggleShiftPublicity()"><i class="fa fa-square-o" ng-hide="shift.public"></i>
+                        <i class="fa fa-check-square-o" ng-show="shift.public"></i></a>
+                </li>
+                <li class="list-group-item">
+                    <strong>Being processed by</strong>
+                    : {{shift.being_processed_by.username}} <a ng-click="doneProcessingShift()" ng-show="shift.being_processed_by"><i class="fa fa-times"></i></a>
+                    <a ng-click="claimShiftForProcessing()" ng-hide="shift.being_processed_by"><i class="fa fa-child"></i></a>
+
+                </li>
+
+
+            </div>
+            <div class="col-md-6">
+                <strong>Shift Logs</strong>
+                <table class="table table-striped">
+
+                    <thead>
+                    <tr>
+                        <th>Text</th>
+                        <th>Time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="logItem in shift.log">
+                        <th scope="row">{{logItem.text}}</th>
+                        <td>{{logItem.time.format('lll') | date :'medium'}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-12">
+                <form class="form">
+                    <input class="form-control btn-block" placeholder="New shift log" ng-model="shiftLog">
+                    <button class="btn btn-primary btn-block" ng-click="postShiftLog()">Submit Log</button>
+                    <button class="btn btn-primary btn-block" ng-click="showModal()">Send Notifications</button>
+
+                </form>
+            </div>
+
+        </div>
+        <div class="section" ng-hide="shift">
+            <table class="table table-striped">
+                <input ng-model="search.$" placeholder="Search">
+
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Detail</th>
+                    <th>Ward/Location</th>
+                    <th>Allocated</th>
+                    <th>Processor</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr style="cursor: pointer" ng-repeat="listedShift in shifts | orderBy: 'start' | filter: search" ng-click="viewShift(listedShift.id)">
+                    <th scope="row">{{listedShift.id}}</th>
+                    <td>{{listedShift.startString | date :'medium'}}</td>
+                    <td>{{listedShift.endString | date :'medium'}}</td>
+                    <td>{{listedShift.detail}}</td>
+                    <td>{{listedShift.location.name}}</td>
+                    <td>{{listedShift.staff_member.username}}</td>
+                    <td>{{listedShift.being_processed_by.username}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="scrollable-content three-quarter-height" ng-class="{fullheight: !comments}" ng-show="adminMode === 'warnings'">
+        <div class="section" ng-show="warning">
+            <div class="col-md-6">
+                <strong>Warning Information</strong>
+                <li class="list-group-item">
+                    <strong>Warning ID Number</strong>
+                    : {{warning.id}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Detail</strong>
+                    : {{warning.detail}}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Time</strong>
+                    : {{warning.timeString | date :'medium'}}
+                </li>
+
+            </div>
+            <div class="col-md-6" ng-show="warning.staff_member">
+                <strong>Staff Member <button class="btn btn-inline" ng-click="openUrl(warning.staff_member.admin_url)">Edit</button></strong>
+                <li class="list-group-item">
+                    <strong>First Name</strong>
+                    : {{warning.staff_member.first_name}}
+                </li>
+                <li class="list-group-item">
+                    <strong>Last Name</strong>
+                    : {{warning.staff_member.last_name}}
+                </li>
+                <li class="list-group-item">
+                    <strong>ID</strong>
+                    : {{warning.staff_member.id}}
+                </li>
+                <label>Chosen Subscriptions</label>
+                <div class="form-control" ng-repeat="channel in warning.staff_member.subscriptions">
+                    <label>{{channel.name}}</label>
+                </div>
+
+                <li class="list-group-item">
+                    <strong>Verified</strong>
+                    :
+                    <a ng-click="toggleStaffVerification()"><i class="fa fa-square-o" ng-hide="warning.staff_member.verified"></i>
+                        <i class="fa fa-check-square-o" ng-show="warning.staff_member.verified"></i></a>
+                </li>
+
+
+            </div>
+            <div class="col-md-12">
+                <form>
+                    <input class="form-control btn-block" placeholder="Enter Warning ID to confirm" ng-model="warningIdConfirmation">
+                    <button class="btn btn-primary btn-block" ng-click="deleteWarning(warning)" ng-disabled="warningIdConfirmation != warning.id">Dismiss Warning</button>
+                </form>
+            </div>
+        </div>
+        <div class="section" ng-hide="warning">
+            <table class="table table-striped">
+                <input ng-model="search.$" placeholder="Search">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Time</th>
+                    <th>Staff Member</th>
+                    <th>Shift</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr style="cursor: pointer" ng-repeat="listedWarning in warnings | orderBy: 'time' | filter: search" ng-click="viewWarning(listedWarning.id)" ng-show="listedWarning.id">
+                    <th scope="row">{{listedWarning.id}}</th>
+                    <td>{{listedWarning.timeString | date :'medium'}}</td>
+                    <td>{{listedWarning.staff_member.first_name}} {{listedWarning.staff_member.last_name}}</td>
+                    <td>{{listedWarning.shift.id}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="scrollable-content three-quarter-height" ng-class="{fullheight: !comments}" ng-show="adminMode === 'addShift'">
+        <div class="section">
+            <form>
+                <div class="col-md-4">
+                    <label>Start: {{ shiftCreationData.start | date:'dd-MM-yyyy HH:mm' }}</label>
+                    <datetimepicker ng-model="shiftCreationData.start"></datetimepicker>
+                </div>
+
+                <div class="col-md-4">
+                    <label>End: {{ shiftCreationData.end | date:'dd-MM-yyyy HH:mm' }}</label>
+                    <datetimepicker ng-model="shiftCreationData.end"></datetimepicker>
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control" placeholder="Detail" ng-model="shiftCreationData.detail">
+                    <label> Channels</label>
+                    <a ng-click="showChannelCreateForm()">(add new)</a>
+
+                    <div ng-show="channelCreateForm">
+                        <input class="form-control col-md-8" placeholder="Channel name" ng-model="channelCreateForm.name">
+                        <button ng-click="submitChannel()" class="col-md-4 btn btn-block btn-primary">Submit</button>
+                    </div>
+
+                    <div ng-repeat="channel in shiftCreationData.channels">
+                        <label>{{channel.name}}</label>
+                        <input type="checkbox" ng-model="channel.selected">
+                    </div>
+
+
+                    <label> Ward/Location</label>
+                    <a ng-click="showWardCreateForm()">(add new)</a>
+
+                    <div ng-show="wardCreateForm">
+                        <input class="form-control col-md-8" placeholder="Ward name" ng-model="wardCreateForm.name">
+                        <button ng-click="submitWard()" class="col-md-4 btn btn-block btn-primary">Submit</button>
+                    </div>
+
+                    <select class="form-control" ng-options ="ward.name for ward in availableWards" ng-model="shiftCreationData.location"></select>
+                    <label> Send notifications immediately?</label>
+                    <input type="checkbox" ng-model="shiftCreationData.send_notification">
+                    <textarea class="form-control" ng-model="shiftCreationData.notification" ng-show="shiftCreationData.send_notification" placeholder="Additional Notification Text"></textarea>
+
+                    <button class="btn btn-primary btn-block" ng-click="submitShift()">Create Shift</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+
+    <a ng-click="toggleComments()">({{commentShowOrHide}} comments)</a>
+    <div class="scrollable-content list-group" style="height: 25%" ng-if="comments">
+        <strong>Comments</strong>
+        <li ng-repeat="comment in chatComments">{{comment.sender}}: {{comment.comment}}</li>
+    </div>
+</div>
+
+<div ui-content-for="bottomNavButtons">
+    <form class="form">
+        <input class="form-control col-md-9" placeholder="Enter comment here" ng-model="chatComment">
+        <button class="btn btn-primary col-md-3" ng-click="postComment()">Submit</button>
+    </form>
+</div>
+
+<div ui-content-for="modals">
+    <div class="scrollable container modal modal-overlay" ng-if='showmodal' ui-state='showmodal'>
+        <div class="scrollable-content modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close"
+                            ng-click="hideModal()">&times;</button>
+                    <h4 class="modal-title">Send Notifications</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form">
+                        <textarea class="form-control" placeholder="Additional notification note" ng-model="notificationNote"></textarea>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button ng-click="hideModal()" class="btn btn-default">Cancel</button>
+                    <button ng-click="sendOutNotifications(notificationNote)" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

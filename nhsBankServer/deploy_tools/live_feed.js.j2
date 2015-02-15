@@ -1,0 +1,42 @@
+/**
+ * Created by brettlarder on 06/11/2014.
+ */
+var http = require('http');
+var server = http.createServer().listen('/tmp/livefeed.sock');
+var io = require('socket.io').listen(server);
+
+var redis = require('redis');
+var sub = redis.createClient();
+
+sub.subscribe('admin');
+
+io.set('authorization', function(data, accept) {
+
+    var options = {
+        socketPath: '/tmp/{{ host }}.socket',
+        path: '/users/validate/',
+        headers: data.headers
+    };
+
+    http.get(options, function(response) {
+        var body = '';
+        response
+            .on('data', function(chunk) {
+                body += chunk
+            })
+            .on('end', function() {
+                if (body === '"ACCEPT"') {
+                    accept(null, true)
+                } else {
+                    accept('error', false)
+                }
+            });
+    });
+});
+
+io.sockets.on('connection', function (socket) {
+
+    sub.on('message', function(channel, message){
+        socket.send(message);
+    });
+});
