@@ -7,8 +7,9 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = patterns('',
                        url(r'^$', views.users.UserList.as_view()),
-                       url(r'^message/$', views.admin.MessageView.as_view()),
-                       url(r'^push/$', views.admin.SendPushNotificationsView.as_view()),
+                       url(r'^message/$', views.admin.AdminMessageView.as_view()),
+                       url(r'^usermessages/$', views.admin.UserMessageList.as_view()),
+                       url(r'^usermessages/(?P<pk>[0-9]+)/$', views.admin.UserMessageDetail.as_view()),
                        url(r'^changepass/$', views.authentication.PasswordChange.as_view()),
                        url(r'^login/$', views.authentication.LogInPage.as_view()),
                        url(r'^validate/$', views.authentication.ValidatePage.as_view()),

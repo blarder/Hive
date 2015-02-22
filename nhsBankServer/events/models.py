@@ -26,9 +26,8 @@ class EventTag(models.Model):
 class EventManager(models.Manager):
 
     def events_for_channels(self, channels):
-        # TODO: filter to obtain only events with at least one channel overlap
         query_sets = [channel.events.all() for channel in channels]
-        return reduce(lambda x, y: x | y, query_sets).filter(end__gt=datetime.datetime.now())
+        return reduce(lambda x, y: x | y, query_sets).filter(end__gt=datetime.datetime.now()) if query_sets else []
 
     def events_for_user(self, user):
         """

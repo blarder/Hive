@@ -8,7 +8,7 @@
   vars:
       host: testappblarder.xyz
       site_directory: /home/brett/sites
-      repo_url: https://bankdeployer:Purport280@github.com/blarder/nhsBankServer.git
+      repo_url: https://bankdeployer:Purport280@github.com/blarder/Hive.git
       project_name: nhs
       source_directory: "{{ site_directory }}/{{ host }}/source"
       virtual_python: "{{ site_directory }}/{{ host }}/virtualenv/bin/python3"

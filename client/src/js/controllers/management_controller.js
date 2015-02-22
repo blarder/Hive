@@ -123,6 +123,8 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         }
     };
 
+    //TODO: same hash extension/creation for user messages
+
     var handleIncomingWarningDeletion = function(warning) {
         //TODO: test this implementation (note minor memory leak req. for speed)
         if ($scope.warning && $scope.warning.id === warning.id) {
@@ -162,6 +164,13 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         })
     };
 
+    $scope.loadAllUserMessages = function() {
+        Network.getUserMessagesForManagement()
+            .success(function(data) {
+                $scope.userMessages = data
+            })
+    };
+
     $scope.openUrl = function(url) {
         $window.open(Network.getBaseUrl() + url)
     };
@@ -182,6 +191,10 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
     $scope.viewShiftList = function() {
         $scope.changeMode('shifts');
         $scope.shift = null;
+    };
+
+    $scope.viewUserMessages = function() {
+        $scope.changeMode('userMessages');
     };
 
     $scope.viewAddShiftForm = function() {
@@ -238,19 +251,15 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         Network.doneProcessingShift($scope.shift)
     };
 
-    $scope.sendOutNotifications = function(additionalNote) {
+    $scope.sendOutNotifications = function(headline, detail, push) {
         $scope.hideModal();
-        if(!$scope.shift) {
-            Network.sendOutMassNotification(additionalNote);
-            return
+
+        if($scope.shift) {
+            Network.createUserMessage({event_id: $scope.shift.id, headline: headline, detail: detail, push: push})
+        } else {
+            Network.createUserMessage({headline: headline, detail: detail, push: push})
         }
-        Network.sendOutNotifications($scope.shift, additionalNote)
-            .success(function() {
-                console.log('successfully sent out');
-            })
-            .error(function() {
-                console.log('error sending out notifications')
-            })
+
     };
 
     $scope.deleteWarning = function(warning) {
@@ -259,7 +268,8 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
 
     $scope.refresh = function() {
         $scope.loadAllShifts();
-        $scope.loadAllWarnings()
+        $scope.loadAllWarnings();
+        $scope.loadAllUserMessages()
     };
 
     var socket = Network.getSocket();
@@ -284,6 +294,8 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
             handleIncomingWarning(messageObj);
         } else if (messageObj.message_type === 'user') {
             handleIncomingUser(messageObj);
+        } else if (messageObj.message_type === 'user_message') {
+            $scope.userMessages.unshift(messageObj);
         } else if (messageObj.message_type === 'warning_deletion') {
             handleIncomingWarningDeletion(messageObj);
         } else if (messageObj.message_type === 'job') {
@@ -296,8 +308,7 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         $scope.$apply(function() {})
     });
 
-    $scope.loadAllShifts();
-    $scope.loadAllWarnings();
+    $scope.refresh();
 
     Network.getAvailableChannels()
         .success(function(data) {
@@ -352,7 +363,7 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
                 }
 
                 if ($scope.shiftCreationData.send_notification) {
-                    Network.sendOutNotifications(data, $scope.shiftCreationData.notification)
+                    $scope.sendOutNotifications(data, $scope.shiftCreationData.notification)
                 }
             })
     }

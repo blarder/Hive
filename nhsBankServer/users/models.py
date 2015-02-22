@@ -45,7 +45,7 @@ class UserManager(BaseUserManager):
 
     def users_for_channels(self, channels):
         query_sets = [channel.subscribers.all() for channel in channels]
-        return reduce(lambda x, y: x | y, query_sets)
+        return reduce(lambda x, y: x | y, query_sets) if query_sets else []
 
     def users_for_event(self, event):
         return self.users_for_channels(event.channels)
@@ -67,8 +67,7 @@ class User(AbstractUser):
 
     def reset_password(self):
         """
-        Sets user password to a random string, which is emailed to them; upon next log in
-        they are required to set a new password, which will update the 'must_change_password' flag
+
         """
 
         self.forgotten_password_key = get_random_string()
@@ -114,12 +113,17 @@ class AdminWarning(models.Model):
 
 
 class UserMessageManager(models.Manager):
-    def global_messages(self):
-        return self.get_queryset().filter(shift__isnull=True)
+    def messages_for_channels(self, channels):
+        query_sets = [channel.messages.all() for channel in channels]
+        return reduce(lambda x, y: x | y, query_sets) if query_sets else []
+
+    def messages_for_user(self, user):
+        return self.messages_for_channels(user.subscriptions.all())
 
 
 class UserMessage(models.Model):
     event = models.ForeignKey(Event, null=True, blank=True, default=None)
+    channels = models.ManyToManyField(Channel, blank=True, default=[], related_name='messages')
     headline = models.CharField(max_length=255)
     detail = models.TextField()
     time = models.DateTimeField(auto_now_add=True)
@@ -127,7 +131,15 @@ class UserMessage(models.Model):
     objects = UserMessageManager()
     #TODO: store messages for each notification sent in the last 24hr
 
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if self.event:
+            self.channels = self.event.channels
 
-class UserSkill(models.Model):
+        super().save(force_insert=force_insert, force_update=force_update, using=using,
+                     update_fields=update_fields)
+
+
+class UserAttribute(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    users = models.ManyToManyField(User, blank=True, default=[], related_name='skills')
+    users = models.ManyToManyField(User, blank=True, default=[], related_name='attributes')

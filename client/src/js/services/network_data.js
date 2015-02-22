@@ -233,12 +233,25 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
             return $http.patch(_baseUrl + '/events/' + shiftId + '/', {log: message})
         };
 
+        //TODO: update following two methods for new UserMessage creation API
         var _sendOutNotifications = function(shift, additionalNote) {
-            return $http.post(_baseUrl + '/users/push/', {id: shift.id, note: additionalNote})
+            return $http.post(_baseUrl + '/users/usermessages/', {event_id: shift.id, headline: additionalNote, push: true})
         };
 
         var _sendOutMassNotification = function(additionalNote) {
-            return $http.post(_baseUrl + '/users/push/', {note: additionalNote})
+            return $http.post(_baseUrl + '/users/usermessages/', {headline: additionalNote, push: true})
+        };
+
+        var _createUserMessage = function(data) {
+            return $http.post(_baseUrl + '/users/usermessages/', data)
+        };
+
+        var _getUserMessagesForManagement = function() {
+            return $http.get(_baseUrl + '/users/usermessages/')
+        };
+
+        var _updateUserMessage = function(data) {
+            return $http.patch(_baseUrl + '/users/usermessages/' + data.id + '/', data)
         };
 
         var _requestForgottenPasswordKey = function(username) {
@@ -317,6 +330,7 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
             getShift: _getShift,
             getAllShifts: _getAllShifts,
             getAllWarnings: _getAllWarnings,
+            getUserMessagesForManagement: _getUserMessagesForManagement,
             getBaseUrl: function() {return _baseUrl},
             postComment: _postComment,
             postShiftLog: _postShiftLog,
@@ -332,6 +346,7 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
             createChannel: _createChannel,
             createLocation: _createLocation,
             createShift: _createShift,
+            createUserMessage: _createUserMessage,
             modifyUser: _modifyUser,
             deleteWarning: _deleteWarning,
             deleteShift: _deleteShift,

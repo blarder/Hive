@@ -6,12 +6,13 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from rest_framework.renderers import JSONRenderer
 import redis
 
-from ..serializers.messages import AdminWarningSerializer
-from ..tasks import send_push_notifications_for_event
-from ..models import AdminWarning
+from ..serializers.messages import AdminWarningSerializer, UserMessageSerializerForManagement,\
+    UserMessageSerializerForCreation
+from ..tasks import send_push_notifications_for_event, create_user_message
+from ..models import AdminWarning, UserMessage
 
 
-class MessageView(APIView):
+class AdminMessageView(APIView):
 
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAdminUser, )
@@ -27,18 +28,49 @@ class MessageView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class SendPushNotificationsView(APIView):
+class UserMessageView(APIView):
+
+    # Create user message here, and only send push notifications if a relevant flag is set to true
 
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAdminUser, )
 
     def post(self, request, format=None):
         try:
-            send_push_notifications_for_event.delay(request.DATA.get('id'), request.DATA.get('note'))
+            if request.DATA.get('push'):
+                send_push_notifications_for_event.delay(request.DATA.get('event_id'), request.DATA.get('note'))
             return Response(status=status.HTTP_200_OK)
 
         except (TypeError, KeyError):
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserMessageList(generics.ListCreateAPIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAdminUser, )
+    queryset = UserMessage.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return UserMessageSerializerForCreation
+        return UserMessageSerializerForManagement
+
+    def create(self, request, *args, **kwargs):
+        create_user_message.delay(request.DATA)
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class UserMessageDetail(generics.RetrieveUpdateDestroyAPIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAdminUser, )
+    queryset = UserMessage.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'PATCH':
+            return UserMessageSerializerForCreation
+        return UserMessageSerializerForManagement
 
 
 class AdminWarningList(generics.ListAPIView):
@@ -46,9 +78,7 @@ class AdminWarningList(generics.ListAPIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAdminUser, )
     serializer_class = AdminWarningSerializer
-
-    def get_queryset(self):
-        return AdminWarning.objects.all()
+    queryset = AdminWarning.objects.all()
 
 
 class AdminWarningDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -56,6 +86,4 @@ class AdminWarningDetail(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAdminUser, )
     serializer_class = AdminWarningSerializer
-
-    def get_queryset(self):
-        return AdminWarning.objects.all()
+    queryset = AdminWarning.objects.all()

@@ -4,14 +4,15 @@ from rest_framework.renderers import JSONRenderer
 
 from events.models import Event, EventLog
 from channels.models import Channel
-from .models import AdminWarning, User
+from .models import AdminWarning, User, UserMessage
 
 from events.serializers import EventSerializerForManagement, EventLogSerializer
 from channels.serializers import ChannelSerializer
-from .serializers.messages import AdminWarningSerializer
+from .serializers.messages import AdminWarningSerializer, UserMessageSerializerForManagement
 from .serializers.users import UserSerializer
 
 import redis
+
 
 def push_data_to_redis(serializer_class, channel_name, message_type, **kwargs):
 
@@ -52,8 +53,12 @@ post_save.connect(push_data_to_redis(EventLogSerializer, 'admin', 'event_log'), 
 post_save.connect(push_data_to_redis(AdminWarningSerializer, 'admin', 'warning'), sender=AdminWarning)
 post_save.connect(push_data_to_redis(UserSerializer, 'admin', 'user'), sender=User)
 post_save.connect(push_data_to_redis(ChannelSerializer, 'admin', 'channel'), sender=Channel)
+post_save.connect(push_data_to_redis(UserMessageSerializerForManagement, 'admin', 'user_message'), sender=UserMessage)
 
 m2m_changed.connect(push_m2m_user_data_to_redis, sender=User.subscriptions.through)
+m2m_changed.connect(push_m2m_event_data_to_redis, sender=Event.channels.through)
 
 post_delete.connect(push_data_to_redis(EventSerializerForManagement, 'admin', 'event_deletion'), sender=Event)
 post_delete.connect(push_data_to_redis(AdminWarningSerializer, 'admin', 'warning_deletion'), sender=AdminWarning)
+post_delete.connect(push_data_to_redis(UserMessageSerializerForManagement, 'admin', 'user_message_deletion'),
+                    sender=UserMessage)
