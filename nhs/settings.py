@@ -154,14 +154,14 @@ EMAIL_HOST_PASSWORD = 'testappblarder280'
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
 TEMPLATE_DIRS = (
-    BASE_DIR + '/nhs/www',
+    BASE_DIR + '/client/www',
 )
 
 STATIC_ROOT = os.path.join(BASE_DIR, '../static')
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    BASE_DIR + '/nhs/www',
+    BASE_DIR + '/client/www',
 )
 
 # CELERY SETTINGS
