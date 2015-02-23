@@ -5,7 +5,7 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
 
 .factory('Network', ['deviceReady', '$q', '$http', '$cookies', 'io', '$rootScope', function(deviceReady, $q, $http, $cookies, io, $rootScope) {
         $http.defaults.useXDomain = true;
-        var _baseUrl = 'http://127.0.0.1:8888';  //'https://testappblarder.xyz:443';
+        var _baseUrl = 'https://testappblarder.xyz:443';
         var _dataAlreadyCollected = false;
         var _userIsStaff = false;
         var _loggedIn = false;
@@ -123,6 +123,10 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
                 $http.defaults.headers.common['X-CSRFToken'] = $cookies.csrftoken;
                 _socket = io.connect(_baseUrl)
             }
+            _socket.on('message', function(message) {
+                console.log(message)
+            });
+            
             _socket.on('disconnect', function() {
                 _socket = null
             });
@@ -144,6 +148,7 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
                 .success(function(data) {
                     window.localStorage.setItem('token', data.token);
                     $http.defaults.headers.common['Authorization'] = "Token " + data.token;
+                    $http.defaults.headers.common['X-CSRFToken'] = $cookies.csrftoken;
                     _userIsStaff = data.staff;
                     _loggedIn = true
                 })

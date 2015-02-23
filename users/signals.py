@@ -24,6 +24,8 @@ def push_data_to_redis(serializer_class, channel_name, message_type, **kwargs):
         r = redis.StrictRedis(host='localhost', port=6379, db=0)
         r.publish(channel_name, json)
 
+        print('pushed message: {}'.format(json))
+
     return wrapped
 
 
