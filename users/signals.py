@@ -50,17 +50,20 @@ def push_m2m_event_data_to_redis(sender, instance, action, reverse, *args, **kwa
 #TODO: use django.db.models.signals.m2m_changed --
 #see http://stackoverflow.com/questions/15898829/manytomanyfield-is-empty-in-post-save-function
 
-post_save.connect(push_data_to_redis(EventSerializerForManagement, 'admin', 'event'), sender=Event)
-post_save.connect(push_data_to_redis(EventLogSerializer, 'admin', 'event_log'), sender=EventLog)
-post_save.connect(push_data_to_redis(AdminWarningSerializer, 'admin', 'warning'), sender=AdminWarning)
-post_save.connect(push_data_to_redis(UserSerializer, 'admin', 'user'), sender=User)
-post_save.connect(push_data_to_redis(ChannelSerializer, 'admin', 'channel'), sender=Channel)
-post_save.connect(push_data_to_redis(UserMessageSerializerForManagement, 'admin', 'user_message'), sender=UserMessage)
+post_save.connect(push_data_to_redis(EventSerializerForManagement, 'admin', 'event'), sender=Event, weak=False)
+post_save.connect(push_data_to_redis(EventLogSerializer, 'admin', 'event_log'), sender=EventLog, weak=False)
+post_save.connect(push_data_to_redis(AdminWarningSerializer, 'admin', 'warning'), sender=AdminWarning, weak=False)
+post_save.connect(push_data_to_redis(UserSerializer, 'admin', 'user'), sender=User, weak=False)
+post_save.connect(push_data_to_redis(ChannelSerializer, 'admin', 'channel'), sender=Channel, weak=False)
+post_save.connect(push_data_to_redis(UserMessageSerializerForManagement, 'admin', 'user_message'), sender=UserMessage,
+                  weak=False)
 
-m2m_changed.connect(push_m2m_user_data_to_redis, sender=User.subscriptions.through)
-m2m_changed.connect(push_m2m_event_data_to_redis, sender=Event.channels.through)
+m2m_changed.connect(push_m2m_user_data_to_redis, sender=User.subscriptions.through, weak=False)
+m2m_changed.connect(push_m2m_event_data_to_redis, sender=Event.channels.through, weak=False)
 
-post_delete.connect(push_data_to_redis(EventSerializerForManagement, 'admin', 'event_deletion'), sender=Event)
-post_delete.connect(push_data_to_redis(AdminWarningSerializer, 'admin', 'warning_deletion'), sender=AdminWarning)
+post_delete.connect(push_data_to_redis(EventSerializerForManagement, 'admin', 'event_deletion'), sender=Event,
+                    weak=False)
+post_delete.connect(push_data_to_redis(AdminWarningSerializer, 'admin', 'warning_deletion'), sender=AdminWarning,
+                    weak=False)
 post_delete.connect(push_data_to_redis(UserMessageSerializerForManagement, 'admin', 'user_message_deletion'),
-                    sender=UserMessage)
+                    sender=UserMessage, weak=False)
