@@ -2,6 +2,7 @@ CELERYD_NODES="worker1"
 CELERY_BIN="{{ celery_binary }}"
 CELERY_APP="{{ project_name }}"
 CELERYD_CHDIR="{{ source_directory }}"
+ENV_PYTHON="{{ virtual_python }}"
 
 # %N will be replaced with the first part of the nodename.
 CELERYD_LOG_FILE="/home/celery/log"
