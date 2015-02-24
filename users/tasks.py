@@ -19,7 +19,10 @@ def create_user_message(message_data):
     headline = message_data.get('headline')
     detail = message_data.get('detail')
 
-    user_message = UserMessage(headline=headline, detail=detail, event=event, channels=channels)
+    user_message = UserMessage(headline=headline, detail=detail, event=event)
+    user_message.save()
+
+    user_message.channels = channels
     user_message.save()
 
     if message_data.get('push'):
