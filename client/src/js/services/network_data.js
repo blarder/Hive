@@ -126,7 +126,7 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
             _socket.on('message', function(message) {
                 console.log(message)
             });
-            
+
             _socket.on('disconnect', function() {
                 _socket = null
             });

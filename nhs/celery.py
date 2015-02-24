@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 __author__ = 'brettlarder'
+
 import os
 
 from celery import Celery
