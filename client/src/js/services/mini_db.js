@@ -8,6 +8,8 @@ angular.module('MiniDB', [])
         var updateCallback = null;
 
         var db = {};
+        var tableArrays = {};
+        var max = 50;
 
         var aliasMap = { // Attribute names that are foreign/many-to-many keys to other tables
             staff_member: 'user',
@@ -15,16 +17,25 @@ angular.module('MiniDB', [])
             subscriptions: 'channel'
         };
 
-        var getDBTable = function(table) {
+        var createTableIfAbsent = function(table) {
             if (aliasMap[table]) {
                 table = aliasMap[table]
             }
 
             if (!db[table]) {
-                db[table] = {}
+                db[table] = {};
+                tableArrays[table] = [];
             }
+        };
 
+        var getDBTable = function(table) {
+            createTableIfAbsent(table);
             return db[table]
+        };
+
+        var getTableArray = function(table) {
+            createTableIfAbsent(table);
+            return tableArrays[table]
         };
 
         var additionalProcessingMap = { // function applied in create/update function when tableName is matched
@@ -43,15 +54,15 @@ angular.module('MiniDB', [])
         var createOrUpdate = function(tableName, item) {
 
             if (angular.isArray(item)) {
-                for (var i = 0; i != item.length; ++i) {
+                for (var i = 0; i < item.length; ++i) {
                     item[i] = createOrUpdate(tableName, item[i])
                 }
-            }
-
-            for (var att in item) {
-                if (item.hasOwnProperty(att)) {
-                    if (angular.isObject(item[att]) && !angular.isDate(item[att])) {
-                        item[att] = createOrUpdate(att, item[att])
+            } else {
+                for (var att in item) {
+                    if (item.hasOwnProperty(att)) {
+                        if (angular.isObject(item[att]) && !angular.isDate(item[att])) {
+                            item[att] = createOrUpdate(att, item[att])
+                        }
                     }
                 }
             }
@@ -65,7 +76,8 @@ angular.module('MiniDB', [])
             }
 
             if (!db[tableName]) {
-                db[tableName] = {}
+                db[tableName] = {};
+                tableArrays[tableName] = []
             }
 
             if (db[tableName][item.id]) {
@@ -73,6 +85,7 @@ angular.module('MiniDB', [])
             }
 
             db[tableName][item.id] = item;
+            tableArrays[tableName].push(item);
             return item
 
         };
@@ -97,7 +110,8 @@ angular.module('MiniDB', [])
             setUpdateCallback: function(callback) {updateCallback = callback},
             connectSocket: connect,
             get: function() {return db},
-            getTable: getDBTable
+            getTable: getDBTable,
+            getArray: getTableArray
         }
 
     }]);

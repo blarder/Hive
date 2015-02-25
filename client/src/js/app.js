@@ -6,6 +6,7 @@ angular.module('Client', [
   'ui.calendar',
   'ui.bootstrap.datetimepicker',
   'socket.io',
+  'MiniDB',
   'ClientApp.services.Cordova',
   'ClientApp.services.NetworkData',
   'ClientApp.services.ActiveShift',

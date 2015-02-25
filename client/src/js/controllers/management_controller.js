@@ -1,28 +1,33 @@
 /**
  * Created by brettlarder on 03/01/2015.
  */
-angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkData', 'ui.bootstrap.datetimepicker'])
+angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkData', 'ui.bootstrap.datetimepicker', 'MiniDB'])
 
-.controller('ManagementController', ['$scope', '$window', 'Network', function($scope, $window, Network) {
-
+.controller('ManagementController', ['$scope', '$window', 'Network', 'MiniDB', function($scope, $window, Network, MiniDB) {
+    $scope.applyAllUpdates = function() {
+        $scope.$apply(function() {})
+    };
+    MiniDB.setUpdateCallback($scope.applyAllUpdates);
+    MiniDB.connectSocket(Network.getSocket());
     $scope.adminMode = 'shifts';
     $scope.shiftLogs = [];
     $scope.chatComments = [];
     $scope.chatComment = '';
-    $scope.shifts = [];
-    $scope.shiftsObj = {};
+    $scope.shifts = MiniDB.getArray('event');
+    $scope.shiftsObj = MiniDB.getTable('event');
     $scope.shift = null;
     $scope.shiftToAdd = {};
     $scope.shiftLog = '';
-    $scope.warnings = [];
-    $scope.warningsObj = {};
-    $scope.usersObj = {};
+    $scope.warnings = MiniDB.getArray('warning');
+    $scope.warningsObj = MiniDB.getTable('warning');
+    $scope.usersObj = MiniDB.getTable('user');
     $scope.warning = null;
     $scope.showmodal = false;
+    $scope.userMessages = MiniDB.getArray('user_message');
 
     $scope.shiftCreationData = {};
 
-    $scope.availableWards = [];
+    $scope.availableWards = MiniDB.getArray('location');
 
     $scope.showModal = function() {
         $scope.showmodal = true
@@ -146,9 +151,10 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         $scope.shift = null;
         Network.getAllShifts()
             .success(function(data) {
-                processShiftsData(data);
-                $scope.shifts = data;
-                $scope.shiftsObj = formHash($scope.shifts);
+                //processShiftsData(data);
+                //$scope.shifts = data;
+                //$scope.shiftsObj = formHash($scope.shifts);
+                MiniDB.update('event', data);
                 $scope.loading = false;
             })
     };
@@ -157,17 +163,19 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         $scope.warning = null;
         Network.getAllWarnings()
             .success(function(data) {
-                console.log(data);
-                processWarningsData(data);
-                $scope.warnings = data;
-                $scope.warningsObj = formHash($scope.warnings);
+                //console.log(data);
+                //processWarningsData(data);
+                //$scope.warnings = data;
+                //$scope.warningsObj = formHash($scope.warnings);
+                MiniDB.update('warning', data)
         })
     };
 
     $scope.loadAllUserMessages = function() {
         Network.getUserMessagesForManagement()
             .success(function(data) {
-                $scope.userMessages = data
+                //$scope.userMessages = data
+                MiniDB.update('user_message', data)
             })
     };
 
@@ -193,8 +201,14 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         $scope.shift = null;
     };
 
+    $scope.viewMessage = function(id) {
+        $scope.changeMode('userMessages');
+        $scope.userMessage = MiniDB.getTable('user_message')[id]
+    };
+
     $scope.viewUserMessages = function() {
         $scope.changeMode('userMessages');
+        $scope.userMessage = null;
     };
 
     $scope.viewAddShiftForm = function() {
@@ -239,10 +253,6 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
             })
     };
 
-    $scope.changeStaffRosterProId = function() {
-        Network.modifyUser({'id': $scope.warning.staff_member.id, 'roster_pro_id': $scope.newRosterProId})
-    };
-
     $scope.claimShiftForProcessing = function() {
         Network.claimShiftForProcessing($scope.shift)
     };
@@ -278,7 +288,7 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         console.log('connected')
     });
 
-    socket.on('message', function(message) {
+    /*socket.on('message', function(message) {
         var messageObj = angular.fromJson(message);
         console.log(messageObj);
 
@@ -306,7 +316,7 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
             $scope.shiftCreationData.channels.unshift(messageObj)
         }
         $scope.$apply(function() {})
-    });
+    });*/
 
     $scope.refresh();
 
@@ -317,7 +327,8 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
 
     Network.getAvailableLocations()
         .success(function(data) {
-            $scope.availableWards = data
+            //$scope.availableWards = data
+            MiniDB.update('location', data)
         });
 
     // -----     FORMS     -----  Used to create new objects inline, while adding a new shift

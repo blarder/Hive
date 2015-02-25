@@ -45,12 +45,12 @@
 
                 <li class="list-group-item">
                     <strong>Start Time</strong>
-                    : {{shift.start.format('lll') | date :'medium'}}
+                    : {{shift.start | date :'medium'}}
                 </li>
 
                 <li class="list-group-item">
                     <strong>End Time</strong>
-                    : {{shift.end.format('lll') | date :'medium'}}
+                    : {{shift.end | date :'medium'}}
                 </li>
 
                 <li class="list-group-item">
@@ -91,7 +91,7 @@
                     <tbody>
                     <tr ng-repeat="logItem in shift.log">
                         <th scope="row">{{logItem.text}}</th>
-                        <td>{{logItem.time.format('lll') | date :'medium'}}</td>
+                        <td>{{logItem.time | date :'medium'}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -124,8 +124,8 @@
                 <tbody>
                 <tr style="cursor: pointer" ng-repeat="listedShift in shifts | orderBy: 'start' | filter: search" ng-click="viewShift(listedShift.id)">
                     <th scope="row">{{listedShift.id}}</th>
-                    <td>{{listedShift.startString | date :'medium'}}</td>
-                    <td>{{listedShift.endString | date :'medium'}}</td>
+                    <td>{{listedShift.start | date :'medium'}}</td>
+                    <td>{{listedShift.end | date :'medium'}}</td>
                     <td>{{listedShift.detail}}</td>
                     <td>{{listedShift.location.name}}</td>
                     <td>{{listedShift.staff_member.username}}</td>
@@ -151,7 +151,7 @@
 
                 <li class="list-group-item">
                     <strong>Time</strong>
-                    : {{warning.timeString | date :'medium'}}
+                    : {{warning.time | date :'medium'}}
                 </li>
 
             </div>
@@ -204,7 +204,7 @@
                 <tbody>
                 <tr style="cursor: pointer" ng-repeat="listedWarning in warnings | orderBy: 'time' | filter: search" ng-click="viewWarning(listedWarning.id)" ng-show="listedWarning.id">
                     <th scope="row">{{listedWarning.id}}</th>
-                    <td>{{listedWarning.timeString | date :'medium'}}</td>
+                    <td>{{listedWarning.time | date :'medium'}}</td>
                     <td>{{listedWarning.staff_member.first_name}} {{listedWarning.staff_member.last_name}}</td>
                     <td>{{listedWarning.shift.id}}</td>
                 </tr>
@@ -360,7 +360,7 @@
                 </div>
                 <div class="modal-body">
                     <form class="form">
-                        <input placeholder="Message Headline" ng-model="notificationHeadline">
+                        <input class="form-control" placeholder="Message Headline" ng-model="notificationHeadline">
                         <textarea class="form-control" placeholder="Additional notification note" ng-model="notificationNote"></textarea>
                         <label>Active Push</label> <input type="checkbox" ng-model="notificationPush">
                     </form>

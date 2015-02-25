@@ -64,6 +64,9 @@ class Event(models.Model):
         return urlresolvers.reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model),
                                     args=(self.id,))
 
+    def __str__(self):
+        return self.detail
+
 
 class EventLog(models.Model):
     event = models.ForeignKey(Event, related_name='log')
