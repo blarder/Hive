@@ -5,9 +5,10 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
 
 .controller('ManagementController', ['$scope', '$window', 'Network', 'MiniDB', function($scope, $window, Network, MiniDB) {
     $scope.applyAllUpdates = function() {
-        $scope.$apply(function() {})
+        $scope.$apply(function() {});
+        console.log(MiniDB.get())
     };
-    MiniDB.setUpdateCallback($scope.applyAllUpdates);
+    //MiniDB.setUpdateCallback($scope.applyAllUpdates);
     MiniDB.connectSocket(Network.getSocket());
     $scope.adminMode = 'shifts';
     $scope.shiftLogs = [];
@@ -25,7 +26,7 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
     $scope.showmodal = false;
     $scope.userMessages = MiniDB.getArray('user_message');
 
-    $scope.shiftCreationData = {};
+    $scope.shiftCreationData = {channels: MiniDB.getArray('channel')};
 
     $scope.availableWards = MiniDB.getArray('location');
 
@@ -59,101 +60,11 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         $scope.comments = !$scope.comments;
     };
 
-    var processShiftsData = function(data) {
-        for (var i = 0; i != data.length; ++i) {
-            data[i].start = moment(data[i].start);
-            data[i].startString = data[i].start.format('lll');
-            data[i].end = moment(data[i].end);
-            data[i].endString = data[i].end.format('lll');
-
-            for (var j = 0; j != data[i].log.length; ++j) {
-                data[i].log[j].time = moment(data[i].log[j].time)
-            }
-        }
-    };
-
-    var processWarningsData = function(data) {
-        for (var i = 0; i != data.length; ++i) {
-            data[i].time = moment(data[i].time);
-            data[i].timeString = data[i].time.format('lll')
-        }
-    };
-
-    var formHash = function(objList) {
-        var hashObj = {};
-        for (var i = 0; i != objList.length; ++i) {
-            if (objList[i].staff_member) {
-                if ($scope.usersObj[objList[i].staff_member.id]) { //User already exists in hash table
-                    angular.extend($scope.usersObj[objList[i].staff_member.id], objList[i].staff_member);
-                    objList[i].staff_member = $scope.usersObj[objList[i].staff_member.id]
-                } else { //User not yet in hash table
-                    $scope.usersObj[objList[i].staff_member.id] = objList[i].staff_member
-                }
-            }
-            hashObj[objList[i].id] = objList[i];
-        }
-
-        return hashObj
-    };
-
-    var extendHash = function(existingHash, newObj) { //Update object in hash, or add a new one if it's not currently there
-        if (newObj.staff_member) {
-            if ($scope.usersObj[newObj.staff_member.id]) {
-                angular.extend($scope.usersObj[newObj.staff_member.id], newObj.staff_member);
-                newObj.staff_member = $scope.usersObj[newObj.staff_member.id]
-            } else {
-                $scope.usersObj[newObj.staff_member.id] = newObj.staff_member
-            }
-        }
-        if (existingHash[newObj.id]) {
-            angular.extend(existingHash[newObj.id], newObj);
-            return false; //Return false if a new object was not inserted into hash
-        } else {
-            existingHash[newObj.id] = newObj;
-            return true; //Return true if object was new
-        }
-    };
-
-    var handleIncomingShift = function(shift) {
-        processShiftsData([shift]);
-        if (extendHash($scope.shiftsObj, shift)) {
-            $scope.shifts.unshift(shift)
-        }
-    };
-
-    var handleIncomingWarning = function(warning) {
-        processWarningsData([warning]);
-        if (extendHash($scope.warningsObj, warning)) {
-            $scope.warnings.unshift(warning)
-        }
-    };
-
-    //TODO: same hash extension/creation for user messages
-
-    var handleIncomingWarningDeletion = function(warning) {
-        //TODO: test this implementation (note minor memory leak req. for speed)
-        if ($scope.warning && $scope.warning.id === warning.id) {
-            $scope.warning = null
-        }
-        for (var key in $scope.warningsObj[warning.id]) {
-            if ($scope.warningsObj[warning.id].hasOwnProperty(key)) {
-                delete $scope.warningsObj[warning.id][key]
-            }
-        }
-    };
-
-    var handleIncomingUser = function(user) {
-        extendHash($scope.usersObj, user)
-    };
-
     $scope.loadAllShifts = function() {
         $scope.loading = true;
         $scope.shift = null;
         Network.getAllShifts()
             .success(function(data) {
-                //processShiftsData(data);
-                //$scope.shifts = data;
-                //$scope.shiftsObj = formHash($scope.shifts);
                 MiniDB.update('event', data);
                 $scope.loading = false;
             })
@@ -163,18 +74,13 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         $scope.warning = null;
         Network.getAllWarnings()
             .success(function(data) {
-                //console.log(data);
-                //processWarningsData(data);
-                //$scope.warnings = data;
-                //$scope.warningsObj = formHash($scope.warnings);
                 MiniDB.update('warning', data)
-        })
+            })
     };
 
     $scope.loadAllUserMessages = function() {
         Network.getUserMessagesForManagement()
             .success(function(data) {
-                //$scope.userMessages = data
                 MiniDB.update('user_message', data)
             })
     };
@@ -273,7 +179,8 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
     };
 
     $scope.deleteWarning = function(warning) {
-        Network.deleteWarning(warning)
+        Network.deleteWarning(warning);
+        $scope.warning = null
     };
 
     $scope.refresh = function() {
@@ -288,46 +195,26 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
         console.log('connected')
     });
 
-    /*socket.on('message', function(message) {
+    socket.on('message', function(message) {
         var messageObj = angular.fromJson(message);
-        console.log(messageObj);
 
-        if (messageObj.message_type === 'event_log') {
-            messageObj.time = moment(messageObj.time);
-            $scope.shiftLogs.unshift(messageObj);
-            $scope.shiftsObj[messageObj.event_id].log.push(messageObj);
-        } else if (messageObj.message_type === 'chat') {
+        if (messageObj.message_type === 'chat') {
             $scope.chatComments.unshift(messageObj)
-        } else if (messageObj.message_type === 'event') {
-            handleIncomingShift(messageObj);
-        } else if (messageObj.message_type === 'warning') {
-            handleIncomingWarning(messageObj);
-        } else if (messageObj.message_type === 'user') {
-            handleIncomingUser(messageObj);
-        } else if (messageObj.message_type === 'user_message') {
-            $scope.userMessages.unshift(messageObj);
-        } else if (messageObj.message_type === 'warning_deletion') {
-            handleIncomingWarningDeletion(messageObj);
-        } else if (messageObj.message_type === 'job') {
-            $scope.availableJobs.unshift(messageObj)
-        } else if (messageObj.message_type === 'location') {
-            $scope.availableWards.unshift(messageObj)
         } else if (messageObj.message_type === 'channel') {
             $scope.shiftCreationData.channels.unshift(messageObj)
         }
         $scope.$apply(function() {})
-    });*/
+    });
 
     $scope.refresh();
 
     Network.getAvailableChannels()
         .success(function(data) {
-            $scope.shiftCreationData.channels = data
+            MiniDB.update('channel', data)
         });
 
     Network.getAvailableLocations()
         .success(function(data) {
-            //$scope.availableWards = data
             MiniDB.update('location', data)
         });
 

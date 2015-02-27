@@ -49,7 +49,7 @@ angular.module('ClientApp.controllers.Calendar', ['ClientApp.services.NetworkDat
     self.parseEvents = function(eventsArray) {
         for (var i = 0, len = eventsArray.length; i != len; i++) {
             eventsArray[i].allDay = false;
-            eventsArray[i].title = eventsArray[i].ward.name;
+            eventsArray[i].title = eventsArray[i].location.name;
         }
     };
 

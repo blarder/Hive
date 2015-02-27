@@ -38,10 +38,10 @@ def create_user_message(message_data):
         if gcm_devices:
             gcm_devices.send_message(headline)
 
-
-        log = EventLog(event=event)
-        log.text = 'Notifications sent out'
-        log.save()
+        if event:
+            log = EventLog(event=event)
+            log.text = 'Notifications sent out'
+            log.save()
 
 
 @shared_task

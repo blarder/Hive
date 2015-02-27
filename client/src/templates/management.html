@@ -8,21 +8,17 @@
 <div ui-content-for="leftSidebar" class="scrollable container">
 
     <div class="scrollable-content">
-        <div class="section">
-            <h2>Updates</h2>
-            <button class="btn btn-primary btn-block" ng-click="viewAddShiftForm()">Add Shift/Event</button>
-            <button class="btn btn-primary btn-block" ng-click="viewShiftList()">Shift/Event List</button>
-            <button class="btn btn-primary btn-block" ng-click="viewWarningList()">Warning List</button>
-            <button class="btn btn-primary btn-block" ng-click="viewUserMessages()">View Messages</button>
-            <button ng-click="showModalForMassMessage()" class="btn btn-primary btn-block">Send Mass Notification</button>
-
-            <div class="list-group">
-                <a class="list-group-item" ng-repeat="adminWarning in warnings" ng-show="adminWarning.id" ng-click="viewWarning(adminWarning.id)">WARNING: {{adminWarning.detail}}</a>
+        <div class="section list-group">
+            <a class="list-group-item" ng-click="viewAddShiftForm()" ng-class="{active: adminMode == 'addShift'}">Create</a>
+            <a class="list-group-item" ng-click="viewShiftList()" ng-class="{active: adminMode == 'shifts'}">Events</a>
+            <a class="list-group-item" ng-click="viewWarningList()" ng-class="{active: adminMode == 'warnings'}">Warnings</a>
+            <a class="list-group-item" ng-click="viewUserMessages()" ng-class="{active: adminMode == 'userMessages'}">Messages</a>
+            <a ng-click="showModalForMassMessage()" class="list-group-item">Notify All</a>
+            <div>
+                <blockquote>Updates</blockquote>
             </div>
-
-            <div class="list-group">
-                <a class="list-group-item" ng-repeat="log in shiftLogs" ng-click="viewShift(log.shift_id)">SHIFT {{log.shift_id}}: {{log.text}}</a>
-            </div>
+            <a class="list-group-item" ng-repeat="adminWarning in warnings" ng-show="adminWarning.id" ng-click="viewWarning(adminWarning.id)">WARNING: {{adminWarning.detail}}</a>
+            <a class="list-group-item" ng-repeat="log in shiftLogs" ng-click="viewShift(log.shift_id)">SHIFT {{log.shift_id}}: {{log.text}}</a>
 
         </div>
     </div>
@@ -37,7 +33,10 @@
     <div class="scrollable-content three-quarter-height" ng-class="{fullheight: !comments}" ng-show="adminMode === 'shifts'">
         <div class="section" ng-show="shift">
             <div class="col-md-6">
-                <strong>Shift Information <button class="btn btn-inline" ng-click="openUrl(shift.admin_url)">Edit</button></strong>
+                <strong>Shift Information
+                    <button class="btn btn-inline btn-primary" ng-click="openUrl(shift.admin_url)">Edit</button>
+                    <button class="btn btn-inline btn-primary" ng-click="showModal()">Send Notifications</button>
+                </strong>
                 <li class="list-group-item">
                     <strong>Shift ID Number</strong>
                     : {{shift.id}}
@@ -62,6 +61,11 @@
                     <strong>Detail</strong>
                     : {{shift.detail}}
                 </li>
+
+                <label>Channels</label>
+                <div class="form-control" ng-repeat="channel in shift.channels track by $index">
+                    <label>{{channel.name}}</label>
+                </div>
 
                 <li class="list-group-item">
                     <strong>Publicly Available</strong>
@@ -97,13 +101,12 @@
                 </table>
             </div>
             <div class="col-md-12">
-                <form class="form">
-                    <input class="form-control btn-block" placeholder="New shift log" ng-model="shiftLog">
-                    <button class="btn btn-primary btn-block" ng-click="postShiftLog()">Submit Log</button>
-                    <button class="btn btn-primary btn-block" ng-click="showModal()">Send Notifications</button>
-
+                <form class="form-inline">
+                    <input class="form-control" style="width: 80%; display: inline" placeholder="New shift log" ng-model="shiftLog">
+                    <button class="btn btn-primary" ng-click="postShiftLog()">Submit Log</button>
                 </form>
             </div>
+
 
         </div>
         <div class="section" ng-hide="shift">
@@ -156,7 +159,7 @@
 
             </div>
             <div class="col-md-6" ng-show="warning.staff_member">
-                <strong>Staff Member <button class="btn btn-inline" ng-click="openUrl(warning.staff_member.admin_url)">Edit</button></strong>
+                <strong>Staff Member <button class="btn btn-inline btn-primary" ng-click="openUrl(warning.staff_member.admin_url)">Edit</button></strong>
                 <li class="list-group-item">
                     <strong>First Name</strong>
                     : {{warning.staff_member.first_name}}
@@ -184,9 +187,9 @@
 
             </div>
             <div class="col-md-12">
-                <form>
-                    <input class="form-control btn-block" placeholder="Enter Warning ID to confirm" ng-model="warningIdConfirmation">
-                    <button class="btn btn-primary btn-block" ng-click="deleteWarning(warning)" ng-disabled="warningIdConfirmation != warning.id">Dismiss Warning</button>
+                <form class="form-inline">
+                    <input class="form-control" style="width: 80%; display: inline" placeholder="Enter Warning ID to confirm" ng-model="warningIdConfirmation">
+                    <button class="btn btn-primary" ng-click="deleteWarning(warning)" ng-disabled="warningIdConfirmation != warning.id">Dismiss</button>
                 </form>
             </div>
         </div>
@@ -236,34 +239,38 @@
                     <strong>Time</strong>
                     : {{userMessage.time | date :'medium'}}
                 </li>
+                <label>Channels</label>
+                <div class="form-control" ng-repeat="channel in userMessage.channels track by $index">
+                    <label>{{channel.name}}</label>
+                </div>
 
             </div>
             <div class="col-md-6" ng-show="userMessage.event">
-                <strong>Event <button class="btn btn-inline" ng-click="openUrl(userMessage.event.admin_url)">Edit</button></strong>
+                <strong>Event <button class="btn btn-inline btn-primary" ng-click="openUrl(userMessage.event.admin_url)">Edit</button></strong>
+                <li class="list-group-item">
+                    <strong>Detail</strong>
+                    : {{userMessage.event.detail}}
+                </li>
+
                 <li class="list-group-item">
                     <strong>Start</strong>
-                    : {{userMessage.event.start}}
+                    : {{userMessage.event.start | date :'medium'}}
                 </li>
                 <li class="list-group-item">
                     <strong>End</strong>
-                    : {{userMessage.event.end}}
+                    : {{userMessage.event.end | date :'medium'}}
                 </li>
                 <li class="list-group-item">
                     <strong>ID</strong>
                     : {{userMessage.event.id}}
                 </li>
                 <label>Channels</label>
-                <div class="form-control" ng-repeat="channel in userMessage.event.channels">
+                <div class="form-control" ng-repeat="channel in userMessage.event.channels track by $index">
                     <label>{{channel.name}}</label>
                 </div>
 
             </div>
-            <div class="col-md-12">
-                <form>
-                    <input class="form-control btn-block" placeholder="Enter Warning ID to confirm" ng-model="warningIdConfirmation">
-                    <button class="btn btn-primary btn-block" ng-click="deleteWarning(warning)" ng-disabled="warningIdConfirmation != warning.id">Dismiss Warning</button>
-                </form>
-            </div>
+
         </div>
         <div class="section" ng-hide="userMessage">
             <table class="table table-striped">
@@ -290,13 +297,15 @@
         <div class="section">
             <form>
                 <div class="col-md-4">
-                    <label>Start: {{ shiftCreationData.start | date:'dd-MM-yyyy HH:mm' }}</label>
+
                     <datetimepicker ng-model="shiftCreationData.start"></datetimepicker>
+                    <label>Start: {{ shiftCreationData.start | date:'dd-MM-yyyy HH:mm' }}</label>
                 </div>
 
                 <div class="col-md-4">
-                    <label>End: {{ shiftCreationData.end | date:'dd-MM-yyyy HH:mm' }}</label>
+
                     <datetimepicker ng-model="shiftCreationData.end"></datetimepicker>
+                    <label>End: {{ shiftCreationData.end | date:'dd-MM-yyyy HH:mm' }}</label>
                 </div>
                 <div class="col-md-4">
                     <input class="form-control" placeholder="Detail" ng-model="shiftCreationData.detail">
@@ -360,8 +369,8 @@
                 </div>
                 <div class="modal-body">
                     <form class="form">
-                        <input class="form-control" placeholder="Message Headline" ng-model="notificationHeadline">
-                        <textarea class="form-control" placeholder="Additional notification note" ng-model="notificationNote"></textarea>
+                        <input class="form-control" maxlength="255" placeholder="Message Headline" ng-model="notificationHeadline">
+                        <textarea class="form-control" maxlength="500" placeholder="Additional notification note" ng-model="notificationNote"></textarea>
                         <label>Active Push</label> <input type="checkbox" ng-model="notificationPush">
                     </form>
                 </div>

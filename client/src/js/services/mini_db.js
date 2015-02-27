@@ -40,7 +40,8 @@ angular.module('MiniDB', [])
 
         var additionalProcessingMap = { // function applied in create/update function when tableName is matched
             // returns a bool indicating whether a table should still be created for this object type
-            event_log: function(log) {db.event[log.event_id].log.push(log); return false}
+            event_log: function(log) {db.event[log.event_id].log.push(log); return false},
+            chat: function() {return false}
         };
 
         var deleteItem = function(tableName, item) {
@@ -57,6 +58,7 @@ angular.module('MiniDB', [])
                 for (var i = 0; i < item.length; ++i) {
                     item[i] = createOrUpdate(tableName, item[i])
                 }
+                return item
             } else {
                 for (var att in item) {
                     if (item.hasOwnProperty(att)) {
