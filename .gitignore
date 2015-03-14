@@ -15,3 +15,4 @@ test_data*
 *.o
 *.so
 db.sqlite3
+client/platforms/*

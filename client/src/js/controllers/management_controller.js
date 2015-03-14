@@ -254,16 +254,24 @@ angular.module('ClientApp.controllers.Management', ['ClientApp.services.NetworkD
     };
 
     $scope.submitShift = function() {
-        Network.createShift($scope.shiftCreationData)
-            .success(function(data) {
-                if (data.data) {
-                    data = data.data
-                }
+        $scope.createShiftError = null;
+        try {
+            Network.createShift($scope.shiftCreationData)
+                .success(function (data) {
+                    if (data.data) {
+                        data = data.data
+                    }
 
-                if ($scope.shiftCreationData.send_notification) {
-                    $scope.sendOutNotifications(data, $scope.shiftCreationData.notification)
-                }
-            })
+                    if ($scope.shiftCreationData.send_notification) {
+                        $scope.sendOutNotifications("New Event", $scope.shiftCreationData.notification)
+                    }
+                })
+                .error(function (data) {
+                    $scope.createShiftError = data
+                })
+        } catch(err) {
+            $scope.createShiftError = "error"
+        }
     }
 
 }]);

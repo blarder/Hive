@@ -118,7 +118,7 @@ class UserMessageManager(models.Manager):
         return reduce(lambda x, y: x | y, query_sets) if query_sets else []
 
     def messages_for_user(self, user):
-        return self.messages_for_channels(user.subscriptions.all())
+        return self.messages_for_channels(user.subscriptions.all()) if user.verified else []
 
 
 class UserMessage(models.Model):

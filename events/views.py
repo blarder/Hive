@@ -12,6 +12,8 @@ class EventList(generics.ListCreateAPIView):
 
     serializer_class = serializers.EventSerializer
 
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
+
     def get_serializer_class(self):
         if self.request.user.is_staff:
             return serializers.EventSerializerForCreation if self.request.method == 'POST' \

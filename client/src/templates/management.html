@@ -337,6 +337,7 @@
                     <textarea class="form-control" ng-model="shiftCreationData.notification" ng-show="shiftCreationData.send_notification" placeholder="Additional Notification Text"></textarea>
 
                     <button class="btn btn-primary btn-block" ng-click="submitShift()">Create Shift</button>
+                    <label class="text-danger" ng-show="createShiftError">Could not create - ensure all fields are filled in</label>
                 </div>
 
             </form>
