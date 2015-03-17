@@ -1,4 +1,4 @@
-django == 1.7
+django == 1.7.1
 djangorestframework == 3.0
 gunicorn == 19.1.1
 django-post-office == 1.1.1
