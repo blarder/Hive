@@ -38,4 +38,3 @@ class UserSerializerForManagement(UserSerializerWithFullSubscriptions):
                   'verified', 'first_name', 'last_name', 'admin_url')
 
         write_only_fields = ('password',)
-        read_only_fields = ('admin_url',)

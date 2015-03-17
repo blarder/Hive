@@ -48,7 +48,6 @@ class EventSerializerForManagement(EventSerializer):
         fields = ('id', 'start', 'end', 'location',
                   'detail', 'being_processed_by',
                   'log', 'public', 'tags', 'channels', 'admin_url')
-        read_only_fields = ('admin_url', )
 
 
 class EventSerializerForCreation(EventSerializerForManagement):
