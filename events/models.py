@@ -34,7 +34,8 @@ class EventManager(models.Manager):
         These are the events the user will be able to see
         """
         if user.is_staff:
-            return self.get_queryset().filter(end__gt=datetime.datetime.now())\
+            # .filter(end__gt=datetime.datetime.now())\ may be needed
+            return self.get_queryset()\
                 .select_related('tags', 'location', 'being_processed_by', 'channels')
 
         if not user.is_authenticated() or not user.verified:
