@@ -41,7 +41,7 @@ class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
 
     def get_serializer_class(self):
-        if self.request.user.is_staff:
+        if self.request.user.is_staff and self.request.method != 'PATCH':
             return serializers.EventSerializerForManagement
 
         return serializers.EventSerializer
