@@ -134,7 +134,7 @@ class UserMessage(models.Model):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         if self.event and self.pk is not None:
-            self.channels = self.event.channels
+            self.channels = self.event.channels.all()
 
         super().save(force_insert=force_insert, force_update=force_update, using=using,
                      update_fields=update_fields)
