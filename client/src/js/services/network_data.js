@@ -119,10 +119,14 @@ angular.module('ClientApp.services.NetworkData', ['ClientApp.services.Cordova', 
         };
 
         var _getSocket = function() {
-            if (_socket === null) {
+            console.log('getting socket');
+            if (_socket == null) {
                 $http.defaults.headers.common['X-CSRFToken'] = $cookies.csrftoken;
+                console.log('connecting socket');
+                console.log(io);
                 _socket = io.connect(_baseUrl)
             }
+
             _socket.on('message', function(message) {
                 console.log(message)
             });
